@@ -1,0 +1,158 @@
+   1              	# 1 "../misc.asm"
+   1              	
+   0              	
+   0              	
+   0              	
+   2              		.equ COEF1, 3483
+   3              		.equ COEF2, 11718
+   4              		.equ COEF3, 1183
+   5              	
+   6              		.text
+   7              	// Descomentar e implementar estas funciones
+   8              		.extern gaussian
+   9              		.global rgb2grayARM
+  10              		.global apply_gaussianARM
+  11              		.global div16384
+  12              		.global rowToColumnARM
+  13              	rgb2grayARM:
+  14 0000 F0472DE9 			PUSH {r4-r10, LR}
+  15 0004 0040A0E1 			MOV R4, R0			@ r4 <- =pixelRGB
+  16 0008 00A0A0E3 			MOV R10, #0
+  17              	
+  18 000c 0050D4E5 			LDRB R5, [R4]		@ r5 <- pixelRGB->R
+  19 0010 0160D4E5 			LDRB R6, [R4, #1]	@ r6 <- pixelRGB->G
+  20 0014 0270D4E5 			LDRB R7, [R4, #2]	@ r7 <- pixelEGB->B
+  21              	
+  22 0018 10819FE5 			LDR R8, =COEF1
+  23 001c 980509E0 			MUL R9, R8, R5		@ r9 <- (pixelRGB->R * 3483)
+  24 0020 09A08AE0 			ADD R10, R10, R9
+  25              	
+  26 0024 08819FE5 			LDR R8, =COEF2
+  27 0028 980609E0 			MUL R9, R8, R6		@ r9 <- (pixelRGB->G * 11718)
+  28 002c 09A08AE0 			ADD R10, R10, R9
+  29              	
+  30 0030 00819FE5 			LDR R8, =COEF3
+  31 0034 980709E0 			MUL R9, R8, R7		@ r9 <- (pixelEGB->B * 1183)
+  32 0038 09A08AE0 			ADD R10, R10, R9
+  33              	
+  34              			@ r0 <- pixel[]
+  35 003c 0A00A0E1 			MOV R0, R10
+  36 0040 FEFFFFEB 			BL div16384
+  37              	
+  38              			@ r0 <- pixel[]/16384
+  39              	
+  40 0044 F047BDE8 			POP {r4-r10, LR}
+  41 0048 1EFF2FE1 			BX LR
+  42              	
+  43              	div16384:
+  44 004c 4007A0E1 			MOV R0, R0, ASR #14
+  45 0050 1EFF2FE1 			BX LR
+  46              	
+  47              	
+  48              	apply_gaussianARM:
+  49 0054 F0472DE9 			PUSH {r4-r10, LR}
+  50 0058 0040A0E1 			MOV R4, R0			@ r4 <- =im1
+  51 005c 0150A0E1 			MOV R5, R1			@ r5 <- =im26
+  52 0060 0260A0E1 			MOV R6, R2			@ r6 <- width
+  53 0064 0370A0E1 			MOV R7, R3			@ r7 <- heigth
+  54              	
+  55 0068 0080A0E3 			MOV R8, #0			@ r8 <- i
+  56 006c 0090A0E3 			MOV R9, #0			@ r9 <- j
+  57              		b1:
+  58 0070 070058E1 			CMP R8, R7
+  59 0074 110000AA 			BGE	b1_end			@ while (i < height)
+  60              		b2:
+  61 0078 060059E1 			CMP R9, R6
+  62 007c 0C0000AA 			BGE b2_end			@ while (j < width)
+  63              	
+  64 0080 0400A0E1 			MOV R0, R4			@ NO NECESARIO -> EN R0 YA ESTÁ =im1
+  65 0084 0610A0E1 			MOV R1, R6			@ r1 <- width
+  66 0088 0720A0E1 			MOV R2, R7			@ r2 <- height
+  67 008c 0830A0E1 			MOV R3, R8			@ r3 <- i
+  68 0090 04D04DE2 			SUB SP, SP, #4
+  69 0094 00908DE5 			STR R9, [SP, #0]	@ PILA[0] <- j
+  70              	
+  71 0098 FEFFFFEB 			BL gaussian			@ r0 <- unsigned char
+  72              	
+  73 009c 04D08DE2 			ADD SP, SP, #4
+  74              	
+  75 00a0 98060AE0 			MUL R10, R8, R6		@ r10 <- (i * width)
+  76 00a4 09A08AE0 			ADD R10, R10, R9	@ r10 <- (i * width + j)
+  77              	
+  78 00a8 0A00C5E7 			STRB R0, [R5, R10]	@ im2[i * width + j] = gaussian()
+  79              	
+  80 00ac 019089E2 			ADD R9, R9, #1
+  81 00b0 F0FFFFEA 			B b2
+  82              	
+  83              		b2_end:
+  84 00b4 0090A0E3 			MOV R9, #0			@ j=0
+  85 00b8 018088E2 			ADD R8, R8, #1		@ ++i
+  86 00bc EBFFFFEA 			B b1
+  87              		b1_end:
+  88 00c0 F047BDE8 			POP {r4-r10, LR}
+  89 00c4 1EFF2FE1 			BX LR
+  90              	
+  91              	rowToColumnARM:
+  92 00c8 F00F2DE9 			PUSH {r4-r11}
+  93 00cc 0040A0E1 			MOV R4, R0			@ r4 <- =im1
+  94 00d0 0150A0E1 			MOV R5, R1			@ r5 <- =im2
+  95 00d4 0260A0E1 			MOV R6, R2			@ r6 <- width
+  96 00d8 0370A0E1 			MOV R7, R3			@ r7 <- heigth
+  97              	
+  98 00dc 0080A0E3 			MOV R8, #0			@ r8 <- i
+  99 00e0 0090A0E3 			MOV R9, #0			@ r9 <- j
+ 100              		b3:
+ 101 00e4 070058E1 			CMP R8, R7
+ 102 00e8 0E0000AA 			BGE	b3_end			@ while (i < height)
+ 103              		b4:
+ 104 00ec 060059E1 			CMP R9, R6
+ 105 00f0 090000AA 			BGE b4_end			@ while (j < width)
+ 106              	
+ 107 00f4 00A0A0E3 			MOV R10, #0
+ 108 00f8 98060AE0 			MUL R10, R8, R6		@ r10 <- (i * width)
+ 109 00fc 09A08AE0 			ADD R10, R10, R9	@ r10 <- (i * width + j)
+ 110              	
+ 111 0100 00B0A0E3 			MOV R11, #0
+ 112 0104 99070BE0 			MUL R11, R9, R7		@ r11 <- (j * width)
+ 113 0108 08B08BE0 			ADD R11, R11, R8	@ r11 <- (j * width + i)
+ 114              	
+ 115              	
+ 116 010c 0BB0D4E7 			LDRB R11, [R4, R11]	@ r11 <- im1[(j * width + i)]
+ 117              	
+ 118 0110 0AB0C5E7 			STRB R11, [R5, R10]	@ r11 -> im2[(i * width + j)]
+ 119              	
+ 120 0114 019089E2 			ADD R9, R9, #1
+ 121 0118 F3FFFFEA 			B b4
+ 122              	
+ 123              		b4_end:
+ 124 011c 0090A0E3 			MOV R9, #0			@ j=0
+ 125 0120 018088E2 			ADD R8, R8, #1		@ ++i
+ 126 0124 EEFFFFEA 			B b3
+ 127              		b3_end:
+ 128 0128 F00FBDE8 			POP {r4-r11}
+ 129 012c 1EFF2FE1 			BX LR
+ 129      9B0D0000 
+ 129      C62D0000 
+ 129      9F040000 
+DEFINED SYMBOLS
+         ../misc.asm:2      *ABS*:00000d9b COEF1
+         ../misc.asm:3      *ABS*:00002dc6 COEF2
+         ../misc.asm:4      *ABS*:0000049f COEF3
+         ../misc.asm:13     .text:00000000 rgb2grayARM
+         ../misc.asm:48     .text:00000054 apply_gaussianARM
+         ../misc.asm:43     .text:0000004c div16384
+         ../misc.asm:91     .text:000000c8 rowToColumnARM
+         ../misc.asm:14     .text:00000000 $a
+         ../misc.asm:57     .text:00000070 b1
+         ../misc.asm:87     .text:000000c0 b1_end
+         ../misc.asm:60     .text:00000078 b2
+         ../misc.asm:83     .text:000000b4 b2_end
+         ../misc.asm:100    .text:000000e4 b3
+         ../misc.asm:127    .text:00000128 b3_end
+         ../misc.asm:103    .text:000000ec b4
+         ../misc.asm:123    .text:0000011c b4_end
+         ../misc.asm:129    .text:00000130 $d
+                   .debug_aranges:0000000c $d
+
+UNDEFINED SYMBOLS
+gaussian

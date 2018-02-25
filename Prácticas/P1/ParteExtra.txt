@@ -1,0 +1,6 @@
+ ENUNCIADO DE LA PARTE EXTRA DE LA PRÁCTICA
+ 
+    -Funciones RowToColumn (C) y ROWToColumnARM (ARM)
+ 
+ Consiste en cambiar filas por columnas (rotar la imagen 
+ para cualquier lado, yo lo he hecho hacia la izquierda).

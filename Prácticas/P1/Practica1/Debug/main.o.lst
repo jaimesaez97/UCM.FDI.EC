@@ -1,0 +1,213 @@
+   1              		.cpu arm7tdmi
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 18, 4
+  11              		.file	"main.c"
+  21              	.Ltext0:
+  22              		.file 1 "../main.c"
+ 2008              		.align	2
+ 2009              		.global	initRGB
+ 2011              	initRGB:
+ 2012              	.LFB0:
+   1:../main.c     **** #include <stdio.h>
+   2:../main.c     **** #include "trafo.h"
+   3:../main.c     **** #include "types.h"
+   4:../main.c     **** #include "time.h"
+   5:../main.c     **** #include "lena512color.h"
+   6:../main.c     **** 
+   7:../main.c     **** // Comentar esta linea para NO usar como entrada
+   8:../main.c     **** 
+   9:../main.c     **** // la imagen de LENA
+  10:../main.c     **** #define LENA
+  11:../main.c     **** 
+  12:../main.c     **** #ifdef LENA
+  13:../main.c     **** #define N 512
+  14:../main.c     **** #define M 512
+  15:../main.c     **** pixelRGB* imagenRGB;
+  16:../main.c     **** #else
+  17:../main.c     **** #define N 512
+  18:../main.c     **** #define M 512
+  19:../main.c     **** pixelRGB imagenRGB[N*M];
+  20:../main.c     **** #endif
+  21:../main.c     **** 
+  22:../main.c     **** unsigned char imagenGris[N*M];
+  23:../main.c     **** unsigned char imagenGauss[N*M];
+  24:../main.c     **** unsigned char imagenSobel[N*M];
+  25:../main.c     **** unsigned char traspuesta[N*M];
+  26:../main.c     **** 
+  27:../main.c     **** extern void apply_gaussianARM(unsigned char[], unsigned char[], int, int);
+  28:../main.c     **** extern void rowToColumnARM(unsigned char[], unsigned char[], int, int);
+  29:../main.c     **** #ifndef LENA
+  30:../main.c     **** void initRGB(int nfilas, int ncols)
+  31:../main.c     **** {
+  32:../main.c     ****     int i,j;
+  33:../main.c     **** 
+  34:../main.c     ****     for (i=0;i<nfilas;i++)
+  35:../main.c     ****         for (j=0; j<ncols; j++) {
+  36:../main.c     ****         	imagenRGB[i*ncols+j].R = (i+j)%256;
+  37:../main.c     ****         	imagenRGB[i*ncols+j].G = (i+j)%256;
+  38:../main.c     ****         	imagenRGB[i*ncols+j].B = (i+j)%256;
+  39:../main.c     ****         }
+  40:../main.c     **** }
+  41:../main.c     **** #else
+  42:../main.c     **** void initRGB(int nfilas, int ncols)
+  43:../main.c     **** {
+ 2013              		.loc 1 43 0
+ 2014              		.cfi_startproc
+ 2015              		@ Function supports interworking.
+ 2016              		@ args = 0, pretend = 0, frame = 8
+ 2017              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2018 0000 0DC0A0E1 		mov	ip, sp
+ 2019              	.LCFI0:
+ 2020              		.cfi_def_cfa_register 12
+ 2021 0004 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2022 0008 04B04CE2 		sub	fp, ip, #4
+ 2023              		.cfi_offset 14, -8
+ 2024              		.cfi_offset 13, -12
+ 2025              		.cfi_offset 11, -16
+ 2026              	.LCFI1:
+ 2027              		.cfi_def_cfa 11, 4
+ 2028 000c 08D04DE2 		sub	sp, sp, #8
+ 2029 0010 10000BE5 		str	r0, [fp, #-16]
+ 2030 0014 14100BE5 		str	r1, [fp, #-20]
+  44:../main.c     ****     imagenRGB = (pixelRGB*) imageLena512;
+ 2031              		.loc 1 44 0
+ 2032 0018 10209FE5 		ldr	r2, .L2
+ 2033 001c 10309FE5 		ldr	r3, .L2+4
+ 2034 0020 002083E5 		str	r2, [r3, #0]
+  45:../main.c     **** }
+ 2035              		.loc 1 45 0
+ 2036 0024 0CD04BE2 		sub	sp, fp, #12
+ 2037 0028 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 2038 002c 1EFF2FE1 		bx	lr
+ 2039              	.L3:
+ 2040              		.align	2
+ 2041              	.L2:
+ 2042 0030 00000000 		.word	imageLena512
+ 2043 0034 00000000 		.word	imagenRGB
+ 2044              		.cfi_endproc
+ 2045              	.LFE0:
+ 2047              		.align	2
+ 2048              		.global	main
+ 2050              	main:
+ 2051              	.LFB1:
+  46:../main.c     **** #endif
+  47:../main.c     **** 
+  48:../main.c     **** 
+  49:../main.c     **** int main() {
+ 2052              		.loc 1 49 0
+ 2053              		.cfi_startproc
+ 2054              		@ Function supports interworking.
+ 2055              		@ args = 0, pretend = 0, frame = 8
+ 2056              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2057 0038 0DC0A0E1 		mov	ip, sp
+ 2058              	.LCFI2:
+ 2059              		.cfi_def_cfa_register 12
+ 2060 003c 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2061 0040 04B04CE2 		sub	fp, ip, #4
+ 2062              		.cfi_offset 14, -8
+ 2063              		.cfi_offset 13, -12
+ 2064              		.cfi_offset 11, -16
+ 2065              	.LCFI3:
+ 2066              		.cfi_def_cfa 11, 4
+ 2067 0044 08D04DE2 		sub	sp, sp, #8
+  50:../main.c     **** 	short int time = 0;
+ 2068              		.loc 1 50 0
+ 2069 0048 0030A0E3 		mov	r3, #0
+ 2070 004c BE304BE1 		strh	r3, [fp, #-14]	@ movhi
+  51:../main.c     ****     timer_init();
+ 2071              		.loc 1 51 0
+ 2072 0050 FEFFFFEB 		bl	timer_init
+  52:../main.c     ****     initRGB(N,M);
+ 2073              		.loc 1 52 0
+ 2074 0054 020CA0E3 		mov	r0, #512
+ 2075 0058 021CA0E3 		mov	r1, #512
+ 2076 005c FEFFFFEB 		bl	initRGB
+  53:../main.c     ****     timer_start();
+ 2077              		.loc 1 53 0
+ 2078 0060 FEFFFFEB 		bl	timer_start
+  54:../main.c     ****     RGB2GrayMatrix(imagenRGB, imagenGris,N,M);
+ 2079              		.loc 1 54 0
+ 2080 0064 70309FE5 		ldr	r3, .L5
+ 2081 0068 003093E5 		ldr	r3, [r3, #0]
+ 2082 006c 0300A0E1 		mov	r0, r3
+ 2083 0070 68109FE5 		ldr	r1, .L5+4
+ 2084 0074 022CA0E3 		mov	r2, #512
+ 2085 0078 023CA0E3 		mov	r3, #512
+ 2086 007c FEFFFFEB 		bl	RGB2GrayMatrix
+  55:../main.c     ****     apply_gaussianARM(imagenGris, imagenGauss, N, M);
+ 2087              		.loc 1 55 0
+ 2088 0080 58009FE5 		ldr	r0, .L5+4
+ 2089 0084 58109FE5 		ldr	r1, .L5+8
+ 2090 0088 022CA0E3 		mov	r2, #512
+ 2091 008c 023CA0E3 		mov	r3, #512
+ 2092 0090 FEFFFFEB 		bl	apply_gaussianARM
+  56:../main.c     ****     apply_sobel(imagenGauss, imagenSobel, N, M);
+ 2093              		.loc 1 56 0
+ 2094 0094 48009FE5 		ldr	r0, .L5+8
+ 2095 0098 48109FE5 		ldr	r1, .L5+12
+ 2096 009c 022CA0E3 		mov	r2, #512
+ 2097 00a0 023CA0E3 		mov	r3, #512
+ 2098 00a4 FEFFFFEB 		bl	apply_sobel
+  57:../main.c     ****     rowToColumnARM(imagenSobel, traspuesta, N, M);
+ 2099              		.loc 1 57 0
+ 2100 00a8 38009FE5 		ldr	r0, .L5+12
+ 2101 00ac 38109FE5 		ldr	r1, .L5+16
+ 2102 00b0 022CA0E3 		mov	r2, #512
+ 2103 00b4 023CA0E3 		mov	r3, #512
+ 2104 00b8 FEFFFFEB 		bl	rowToColumnARM
+  58:../main.c     ****     time = timer_stop();
+ 2105              		.loc 1 58 0
+ 2106 00bc FEFFFFEB 		bl	timer_stop
+ 2107 00c0 0030A0E1 		mov	r3, r0
+ 2108 00c4 BE304BE1 		strh	r3, [fp, #-14]	@ movhi
+  59:../main.c     ****     return 0;
+ 2109              		.loc 1 59 0
+ 2110 00c8 0030A0E3 		mov	r3, #0
+  60:../main.c     **** }
+ 2111              		.loc 1 60 0
+ 2112 00cc 0300A0E1 		mov	r0, r3
+ 2113 00d0 0CD04BE2 		sub	sp, fp, #12
+ 2114 00d4 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 2115 00d8 1EFF2FE1 		bx	lr
+ 2116              	.L6:
+ 2117              		.align	2
+ 2118              	.L5:
+ 2119 00dc 00000000 		.word	imagenRGB
+ 2120 00e0 00000000 		.word	imagenGris
+ 2121 00e4 00000000 		.word	imagenGauss
+ 2122 00e8 00000000 		.word	imagenSobel
+ 2123 00ec 00000000 		.word	traspuesta
+ 2124              		.cfi_endproc
+ 2125              	.LFE1:
+ 2127              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+                            *COM*:00000004 imagenRGB
+                            *COM*:00040000 imagenGris
+                            *COM*:00040000 imagenGauss
+                            *COM*:00040000 imagenSobel
+                            *COM*:00040000 traspuesta
+C:\Users\USUARI~1\AppData\Local\Temp\cckk4YDn.s:2008   .text:00000000 $a
+C:\Users\USUARI~1\AppData\Local\Temp\cckk4YDn.s:2011   .text:00000000 initRGB
+C:\Users\USUARI~1\AppData\Local\Temp\cckk4YDn.s:2042   .text:00000030 $d
+C:\Users\USUARI~1\AppData\Local\Temp\cckk4YDn.s:2047   .text:00000038 $a
+C:\Users\USUARI~1\AppData\Local\Temp\cckk4YDn.s:2050   .text:00000038 main
+C:\Users\USUARI~1\AppData\Local\Temp\cckk4YDn.s:2119   .text:000000dc $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+imageLena512
+timer_init
+timer_start
+RGB2GrayMatrix
+apply_gaussianARM
+apply_sobel
+rowToColumnARM
+timer_stop
