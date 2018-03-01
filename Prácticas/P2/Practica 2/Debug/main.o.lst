@@ -1,0 +1,501 @@
+   1              		.cpu arm7tdmi
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 18, 4
+  11              		.file	"main.c"
+  21              	.Ltext0:
+  22              		.file 1 "../main.c"
+ 2733              		.align	2
+ 2736              	RL:
+ 2737 0000 00000000 		.word	0
+ 2738 0004 05000000 		.word	5
+ 2739 0008 05000000 		.word	5
+ 2740 000c 00000000 		.word	0
+ 2741 0010 00000000 		.word	0
+ 2742 0014 00000000 		.word	0
+ 2743              		.text
+ 2744              		.align	2
+ 2745              		.global	setup
+ 2747              	setup:
+ 2748              	.LFB0:
+   1:../main.c     **** // ULTIMO
+   2:../main.c     **** #include <stdio.h>
+   3:../main.c     **** #include "44b.h"
+   4:../main.c     **** #include "button.h"
+   5:../main.c     **** #include "leds.h"
+   6:../main.c     **** #include "utils.h"
+   7:../main.c     **** #include "D8Led.h"
+   8:../main.c     **** #include "gpio.h"
+   9:../main.c     **** 
+  10:../main.c     **** struct RLstat {
+  11:../main.c     **** 	int moving;
+  12:../main.c     **** 	int speed;
+  13:../main.c     **** 	int iter;
+  14:../main.c     **** 	int direction;
+  15:../main.c     **** 	int position;
+  16:../main.c     **** 	int atras;	// 0 no, 1 sÌ
+  17:../main.c     **** };
+  18:../main.c     **** 
+  19:../main.c     **** static struct RLstat RL = {
+  20:../main.c     **** 	.moving = 0,
+  21:../main.c     **** 	.speed = 5,
+  22:../main.c     **** 	.iter = 5,
+  23:../main.c     **** 	.direction = 0,
+  24:../main.c     **** 	.position = 0,
+  25:../main.c     **** 	.atras = 0
+  26:../main.c     **** };
+  27:../main.c     **** 
+  28:../main.c     **** int setup(void)
+  29:../main.c     **** {
+ 2749              		.loc 1 29 0
+ 2750              		.cfi_startproc
+ 2751              		@ Function supports interworking.
+ 2752              		@ args = 0, pretend = 0, frame = 8
+ 2753              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2754 0000 0DC0A0E1 		mov	ip, sp
+ 2755              	.LCFI0:
+ 2756              		.cfi_def_cfa_register 12
+ 2757 0004 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2758 0008 04B04CE2 		sub	fp, ip, #4
+ 2759              		.cfi_offset 14, -8
+ 2760              		.cfi_offset 13, -12
+ 2761              		.cfi_offset 11, -16
+ 2762              	.LCFI1:
+ 2763              		.cfi_def_cfa 11, 4
+ 2764 000c 08D04DE2 		sub	sp, sp, #8
+  30:../main.c     **** 	// configuramos B para que pines 9 y 10 sean de salida
+  31:../main.c     **** 	leds_init();
+ 2765              		.loc 1 31 0
+ 2766 0010 FEFFFFEB 		bl	leds_init
+  32:../main.c     **** 
+  33:../main.c     **** 	// display de 8 segmentos -> no hace falta
+  34:../main.c     **** 	D8Led_init();
+ 2767              		.loc 1 34 0
+ 2768 0014 FEFFFFEB 		bl	D8Led_init
+  35:../main.c     **** 	D8Led_segment(RL.position);
+ 2769              		.loc 1 35 0
+ 2770 0018 74309FE5 		ldr	r3, .L2
+ 2771 001c 103093E5 		ldr	r3, [r3, #16]
+ 2772 0020 0300A0E1 		mov	r0, r3
+ 2773 0024 FEFFFFEB 		bl	D8Led_segment
+  36:../main.c     **** 
+  37:../main.c     **** 	// configuramos G para que pines 6 y 7 sean de entrada
+  38:../main.c     **** 	enum port_mode mode;
+  39:../main.c     **** 	mode = INPUT;
+ 2774              		.loc 1 39 0
+ 2775 0028 0030A0E3 		mov	r3, #0
+ 2776 002c 0D304BE5 		strb	r3, [fp, #-13]
+  40:../main.c     **** 	portG_conf(6, mode);
+ 2777              		.loc 1 40 0
+ 2778 0030 0D305BE5 		ldrb	r3, [fp, #-13]	@ zero_extendqisi2
+ 2779 0034 0600A0E3 		mov	r0, #6
+ 2780 0038 0310A0E1 		mov	r1, r3
+ 2781 003c FEFFFFEB 		bl	portG_conf
+  41:../main.c     **** 	portG_conf(7, mode);
+ 2782              		.loc 1 41 0
+ 2783 0040 0D305BE5 		ldrb	r3, [fp, #-13]	@ zero_extendqisi2
+ 2784 0044 0700A0E3 		mov	r0, #7
+ 2785 0048 0310A0E1 		mov	r1, r3
+ 2786 004c FEFFFFEB 		bl	portG_conf
+  42:../main.c     **** 
+  43:../main.c     **** 	// activamos resistencias de pull-up
+  44:../main.c     **** 	enum enable st;
+  45:../main.c     **** 	st = ENABLE;
+ 2787              		.loc 1 45 0
+ 2788 0050 0130A0E3 		mov	r3, #1
+ 2789 0054 0E304BE5 		strb	r3, [fp, #-14]
+  46:../main.c     **** 	portG_conf_pup(6, st);
+ 2790              		.loc 1 46 0
+ 2791 0058 0E305BE5 		ldrb	r3, [fp, #-14]	@ zero_extendqisi2
+ 2792 005c 0600A0E3 		mov	r0, #6
+ 2793 0060 0310A0E1 		mov	r1, r3
+ 2794 0064 FEFFFFEB 		bl	portG_conf_pup
+  47:../main.c     **** 	portG_conf_pup(7, st);
+ 2795              		.loc 1 47 0
+ 2796 0068 0E305BE5 		ldrb	r3, [fp, #-14]	@ zero_extendqisi2
+ 2797 006c 0700A0E3 		mov	r0, #7
+ 2798 0070 0310A0E1 		mov	r1, r3
+ 2799 0074 FEFFFFEB 		bl	portG_conf_pup
+  48:../main.c     **** 
+  49:../main.c     **** 	// rutina Delay invocada con valor 0 para su calibraciÛn
+  50:../main.c     **** 	Delay(0);
+ 2800              		.loc 1 50 0
+ 2801 0078 0000A0E3 		mov	r0, #0
+ 2802 007c FEFFFFEB 		bl	Delay
+  51:../main.c     **** 
+  52:../main.c     **** 
+  53:../main.c     **** 
+  54:../main.c     **** 	return 0;
+ 2803              		.loc 1 54 0
+ 2804 0080 0030A0E3 		mov	r3, #0
+  55:../main.c     **** }
+ 2805              		.loc 1 55 0
+ 2806 0084 0300A0E1 		mov	r0, r3
+ 2807 0088 0CD04BE2 		sub	sp, fp, #12
+ 2808 008c 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 2809 0090 1EFF2FE1 		bx	lr
+ 2810              	.L3:
+ 2811              		.align	2
+ 2812              	.L2:
+ 2813 0094 00000000 		.word	RL
+ 2814              		.cfi_endproc
+ 2815              	.LFE0:
+ 2817              		.align	2
+ 2818              		.global	loop
+ 2820              	loop:
+ 2821              	.LFB1:
+  56:../main.c     **** 
+  57:../main.c     **** int loop(void)
+  58:../main.c     **** {
+ 2822              		.loc 1 58 0
+ 2823              		.cfi_startproc
+ 2824              		@ Function supports interworking.
+ 2825              		@ args = 0, pretend = 0, frame = 8
+ 2826              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2827 0098 0DC0A0E1 		mov	ip, sp
+ 2828              	.LCFI2:
+ 2829              		.cfi_def_cfa_register 12
+ 2830 009c 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 2831 00a0 04B04CE2 		sub	fp, ip, #4
+ 2832              		.cfi_offset 14, -8
+ 2833              		.cfi_offset 13, -12
+ 2834              		.cfi_offset 11, -16
+ 2835              	.LCFI3:
+ 2836              		.cfi_def_cfa 11, 4
+ 2837 00a4 08D04DE2 		sub	sp, sp, #8
+  59:../main.c     **** 	unsigned int buttons = read_button();
+ 2838              		.loc 1 59 0
+ 2839 00a8 FEFFFFEB 		bl	read_button
+ 2840 00ac 14000BE5 		str	r0, [fp, #-20]
+  60:../main.c     **** 
+  61:../main.c     **** 	if (buttons & BUT1) {	// led1 pulsado
+ 2841              		.loc 1 61 0
+ 2842 00b0 14301BE5 		ldr	r3, [fp, #-20]
+ 2843 00b4 013003E2 		and	r3, r3, #1
+ 2844 00b8 FF3003E2 		and	r3, r3, #255
+ 2845 00bc 000053E3 		cmp	r3, #0
+ 2846 00c0 0300000A 		beq	.L5
+  62:../main.c     **** 
+  63:../main.c     **** 	// COMPLETAR: utilizando la interfaz para los leds definida en leds.h
+  64:../main.c     **** 	// hay que conmutar el led1, si esta encendido apagarlo y viceversa
+  65:../main.c     **** 	// Tambi√©n hay que comutar la direcci√≥n del movimiento del led rotante
+  66:../main.c     **** 	// representado por el campo direction de la variable RL
+  67:../main.c     **** 		led1_switch();
+ 2847              		.loc 1 67 0
+ 2848 00c4 FEFFFFEB 		bl	led1_switch
+  68:../main.c     **** 
+  69:../main.c     **** //		if(RL.atras == 1){
+  70:../main.c     **** //			RL.atras = 0;
+  71:../main.c     **** //			RL.direction = (RL.direction + 1) % 2;
+  72:../main.c     **** //		}
+  73:../main.c     **** //		else{
+  74:../main.c     **** //			RL.atras = 1;
+  75:../main.c     **** //		}
+  76:../main.c     **** 		RL.atras = 1;
+ 2849              		.loc 1 76 0
+ 2850 00c8 B0319FE5 		ldr	r3, .L12
+ 2851 00cc 0120A0E3 		mov	r2, #1
+ 2852 00d0 142083E5 		str	r2, [r3, #20]
+ 2853              	.L5:
+  77:../main.c     **** 
+  78:../main.c     **** 
+  79:../main.c     **** 
+  80:../main.c     **** 	}
+  81:../main.c     **** 
+  82:../main.c     **** 	if (buttons & BUT2) {	// led2 pulsado
+ 2854              		.loc 1 82 0
+ 2855 00d4 14301BE5 		ldr	r3, [fp, #-20]
+ 2856 00d8 023003E2 		and	r3, r3, #2
+ 2857 00dc 000053E3 		cmp	r3, #0
+ 2858 00e0 0300000A 		beq	.L6
+  83:../main.c     **** 		// COMPLETAR: utilizando la interfaz para los leds definida en leds.h
+  84:../main.c     **** 		// hay que conmutar el led2
+  85:../main.c     **** 		// Tambi√©n hay que comutar el estado de movimiento del led rotante
+  86:../main.c     **** 		// representado por el campo moving de la variable RL, y en caso de
+  87:../main.c     **** 		// ponerlo en marcha debemos reiniciar el campo iter al valor del campo speed.
+  88:../main.c     **** 		led2_switch();
+ 2859              		.loc 1 88 0
+ 2860 00e4 FEFFFFEB 		bl	led2_switch
+  89:../main.c     **** 
+  90:../main.c     **** 		RL.moving = 1;
+ 2861              		.loc 1 90 0
+ 2862 00e8 90319FE5 		ldr	r3, .L12
+ 2863 00ec 0120A0E3 		mov	r2, #1
+ 2864 00f0 002083E5 		str	r2, [r3, #0]
+ 2865              	.L6:
+  91:../main.c     **** 	}
+  92:../main.c     **** 
+  93:../main.c     **** 	if (RL.moving) {
+ 2866              		.loc 1 93 0
+ 2867 00f4 84319FE5 		ldr	r3, .L12
+ 2868 00f8 003093E5 		ldr	r3, [r3, #0]
+ 2869 00fc 000053E3 		cmp	r3, #0
+ 2870 0100 5300000A 		beq	.L7
+  94:../main.c     **** 
+  95:../main.c     **** 
+  96:../main.c     **** 		RL.iter--;
+ 2871              		.loc 1 96 0
+ 2872 0104 74319FE5 		ldr	r3, .L12
+ 2873 0108 083093E5 		ldr	r3, [r3, #8]
+ 2874 010c 012043E2 		sub	r2, r3, #1
+ 2875 0110 68319FE5 		ldr	r3, .L12
+ 2876 0114 082083E5 		str	r2, [r3, #8]
+  97:../main.c     **** 		if (RL.iter == 0) {
+ 2877              		.loc 1 97 0
+ 2878 0118 60319FE5 		ldr	r3, .L12
+ 2879 011c 083093E5 		ldr	r3, [r3, #8]
+ 2880 0120 000053E3 		cmp	r3, #0
+ 2881 0124 2400001A 		bne	.L8
+  98:../main.c     **** 			// COMPLETAR: debemos hacer avanzar el led rotante una posici√≥n en
+  99:../main.c     **** 			// la direcci√≥n indicada por el campo direction de la variable RL.
+ 100:../main.c     **** 			// La posici√≥n actual est√° representada en el campo position.
+ 101:../main.c     **** 			// Recordar que queremos un movimiento circular, representado por
+ 102:../main.c     **** 			// las 6 primeras posiciones en el array Segmentes del display de 8
+ 103:../main.c     **** 			// segmentos, por lo que position debe estar siempre entre 0 y 5.
+ 104:../main.c     **** 
+ 105:../main.c     **** 			if(!RL.atras){
+ 2882              		.loc 1 105 0
+ 2883 0128 50319FE5 		ldr	r3, .L12
+ 2884 012c 143093E5 		ldr	r3, [r3, #20]
+ 2885 0130 000053E3 		cmp	r3, #0
+ 2886 0134 2000001A 		bne	.L8
+ 106:../main.c     **** 				//deber· desplazar el segmento una posiciÛn y
+ 107:../main.c     **** 				//reiniciar dicho contador.
+ 108:../main.c     **** 				RL.iter = RL.speed;
+ 2887              		.loc 1 108 0
+ 2888 0138 40319FE5 		ldr	r3, .L12
+ 2889 013c 042093E5 		ldr	r2, [r3, #4]
+ 2890 0140 38319FE5 		ldr	r3, .L12
+ 2891 0144 082083E5 		str	r2, [r3, #8]
+ 109:../main.c     **** 				if(RL.direction == 0){ // ANTIHORARIO ( En Segments de la posicion 5 a 0)
+ 2892              		.loc 1 109 0
+ 2893 0148 30319FE5 		ldr	r3, .L12
+ 2894 014c 0C3093E5 		ldr	r3, [r3, #12]
+ 2895 0150 000053E3 		cmp	r3, #0
+ 2896 0154 0C00001A 		bne	.L9
+ 110:../main.c     **** 					RL.position--;
+ 2897              		.loc 1 110 0
+ 2898 0158 20319FE5 		ldr	r3, .L12
+ 2899 015c 103093E5 		ldr	r3, [r3, #16]
+ 2900 0160 012043E2 		sub	r2, r3, #1
+ 2901 0164 14319FE5 		ldr	r3, .L12
+ 2902 0168 102083E5 		str	r2, [r3, #16]
+ 111:../main.c     **** 					if(RL.position < 0)
+ 2903              		.loc 1 111 0
+ 2904 016c 0C319FE5 		ldr	r3, .L12
+ 2905 0170 103093E5 		ldr	r3, [r3, #16]
+ 2906 0174 000053E3 		cmp	r3, #0
+ 2907 0178 0F0000AA 		bge	.L8
+ 112:../main.c     **** 						RL.position = 5;
+ 2908              		.loc 1 112 0
+ 2909 017c FC309FE5 		ldr	r3, .L12
+ 2910 0180 0520A0E3 		mov	r2, #5
+ 2911 0184 102083E5 		str	r2, [r3, #16]
+ 2912 0188 0B0000EA 		b	.L8
+ 2913              	.L9:
+ 113:../main.c     **** 
+ 114:../main.c     **** 				}
+ 115:../main.c     **** 				else{ // SENTIDO HORARIO (de 0 a 5)
+ 116:../main.c     **** 					RL.position++;
+ 2914              		.loc 1 116 0
+ 2915 018c EC309FE5 		ldr	r3, .L12
+ 2916 0190 103093E5 		ldr	r3, [r3, #16]
+ 2917 0194 012083E2 		add	r2, r3, #1
+ 2918 0198 E0309FE5 		ldr	r3, .L12
+ 2919 019c 102083E5 		str	r2, [r3, #16]
+ 117:../main.c     **** 					if(RL.position > 5)
+ 2920              		.loc 1 117 0
+ 2921 01a0 D8309FE5 		ldr	r3, .L12
+ 2922 01a4 103093E5 		ldr	r3, [r3, #16]
+ 2923 01a8 050053E3 		cmp	r3, #5
+ 2924 01ac 020000DA 		ble	.L8
+ 118:../main.c     **** 						RL.position = 0;
+ 2925              		.loc 1 118 0
+ 2926 01b0 C8309FE5 		ldr	r3, .L12
+ 2927 01b4 0020A0E3 		mov	r2, #0
+ 2928 01b8 102083E5 		str	r2, [r3, #16]
+ 2929              	.L8:
+ 119:../main.c     **** 				}
+ 120:../main.c     **** 			}
+ 121:../main.c     **** 
+ 122:../main.c     **** 		}
+ 123:../main.c     **** 
+ 124:../main.c     **** 		if(RL.atras){
+ 2930              		.loc 1 124 0
+ 2931 01bc BC309FE5 		ldr	r3, .L12
+ 2932 01c0 143093E5 		ldr	r3, [r3, #20]
+ 2933 01c4 000053E3 		cmp	r3, #0
+ 2934 01c8 2100000A 		beq	.L7
+ 2935              	.LBB2:
+ 125:../main.c     **** 		// CUENTA ATRAS
+ 126:../main.c     **** 			D8Led_digit(3);
+ 2936              		.loc 1 126 0
+ 2937 01cc 0300A0E3 		mov	r0, #3
+ 2938 01d0 FEFFFFEB 		bl	D8Led_digit
+ 127:../main.c     **** 			Delay(10000);
+ 2939              		.loc 1 127 0
+ 2940 01d4 A8009FE5 		ldr	r0, .L12+4
+ 2941 01d8 FEFFFFEB 		bl	Delay
+ 128:../main.c     **** 			D8Led_digit(2);
+ 2942              		.loc 1 128 0
+ 2943 01dc 0200A0E3 		mov	r0, #2
+ 2944 01e0 FEFFFFEB 		bl	D8Led_digit
+ 129:../main.c     **** 			Delay(10000);
+ 2945              		.loc 1 129 0
+ 2946 01e4 98009FE5 		ldr	r0, .L12+4
+ 2947 01e8 FEFFFFEB 		bl	Delay
+ 130:../main.c     **** 			D8Led_digit(1);
+ 2948              		.loc 1 130 0
+ 2949 01ec 0100A0E3 		mov	r0, #1
+ 2950 01f0 FEFFFFEB 		bl	D8Led_digit
+ 131:../main.c     **** 			Delay(10000);
+ 2951              		.loc 1 131 0
+ 2952 01f4 88009FE5 		ldr	r0, .L12+4
+ 2953 01f8 FEFFFFEB 		bl	Delay
+ 132:../main.c     **** 			D8Led_digit(10000);
+ 2954              		.loc 1 132 0
+ 2955 01fc 80009FE5 		ldr	r0, .L12+4
+ 2956 0200 FEFFFFEB 		bl	D8Led_digit
+ 133:../main.c     **** 			RL.atras = 0;
+ 2957              		.loc 1 133 0
+ 2958 0204 74309FE5 		ldr	r3, .L12
+ 2959 0208 0020A0E3 		mov	r2, #0
+ 2960 020c 142083E5 		str	r2, [r3, #20]
+ 134:../main.c     **** 			int i = 0;
+ 2961              		.loc 1 134 0
+ 2962 0210 0030A0E3 		mov	r3, #0
+ 2963 0214 10300BE5 		str	r3, [fp, #-16]
+ 135:../main.c     **** 			while(i < 10){
+ 2964              		.loc 1 135 0
+ 2965 0218 0A0000EA 		b	.L10
+ 2966              	.L11:
+ 136:../main.c     **** 					Delay(1000);
+ 2967              		.loc 1 136 0
+ 2968 021c FA0FA0E3 		mov	r0, #1000
+ 2969 0220 FEFFFFEB 		bl	Delay
+ 137:../main.c     **** 					D8Led_digit(8);
+ 2970              		.loc 1 137 0
+ 2971 0224 0800A0E3 		mov	r0, #8
+ 2972 0228 FEFFFFEB 		bl	D8Led_digit
+ 138:../main.c     **** 					Delay(1000);
+ 2973              		.loc 1 138 0
+ 2974 022c FA0FA0E3 		mov	r0, #1000
+ 2975 0230 FEFFFFEB 		bl	Delay
+ 139:../main.c     **** 					D8Led_segment(6);
+ 2976              		.loc 1 139 0
+ 2977 0234 0600A0E3 		mov	r0, #6
+ 2978 0238 FEFFFFEB 		bl	D8Led_segment
+ 140:../main.c     **** 					i++;
+ 2979              		.loc 1 140 0
+ 2980 023c 10301BE5 		ldr	r3, [fp, #-16]
+ 2981 0240 013083E2 		add	r3, r3, #1
+ 2982 0244 10300BE5 		str	r3, [fp, #-16]
+ 2983              	.L10:
+ 135:../main.c     **** 			while(i < 10){
+ 2984              		.loc 1 135 0 discriminator 1
+ 2985 0248 10301BE5 		ldr	r3, [fp, #-16]
+ 2986 024c 090053E3 		cmp	r3, #9
+ 2987 0250 F1FFFFDA 		ble	.L11
+ 2988              	.L7:
+ 2989              	.LBE2:
+ 141:../main.c     **** 			}
+ 142:../main.c     **** 		}
+ 143:../main.c     **** 
+ 144:../main.c     **** 	}
+ 145:../main.c     **** 
+ 146:../main.c     **** 	D8Led_segment(RL.position);
+ 2990              		.loc 1 146 0
+ 2991 0254 24309FE5 		ldr	r3, .L12
+ 2992 0258 103093E5 		ldr	r3, [r3, #16]
+ 2993 025c 0300A0E1 		mov	r0, r3
+ 2994 0260 FEFFFFEB 		bl	D8Led_segment
+ 147:../main.c     **** 
+ 148:../main.c     **** 	Delay(2000); // espera de 200ms para que el bucle se repita 5 veces por segundo
+ 2995              		.loc 1 148 0
+ 2996 0264 7D0EA0E3 		mov	r0, #2000
+ 2997 0268 FEFFFFEB 		bl	Delay
+ 149:../main.c     **** 	return 0;
+ 2998              		.loc 1 149 0
+ 2999 026c 0030A0E3 		mov	r3, #0
+ 150:../main.c     **** }
+ 3000              		.loc 1 150 0
+ 3001 0270 0300A0E1 		mov	r0, r3
+ 3002 0274 0CD04BE2 		sub	sp, fp, #12
+ 3003 0278 00689DE8 		ldmfd	sp, {fp, sp, lr}
+ 3004 027c 1EFF2FE1 		bx	lr
+ 3005              	.L13:
+ 3006              		.align	2
+ 3007              	.L12:
+ 3008 0280 00000000 		.word	RL
+ 3009 0284 10270000 		.word	10000
+ 3010              		.cfi_endproc
+ 3011              	.LFE1:
+ 3013              		.align	2
+ 3014              		.global	main
+ 3016              	main:
+ 3017              	.LFB2:
+ 151:../main.c     **** 
+ 152:../main.c     **** 
+ 153:../main.c     **** int main(void)
+ 154:../main.c     **** {
+ 3018              		.loc 1 154 0
+ 3019              		.cfi_startproc
+ 3020              		@ Function supports interworking.
+ 3021              		@ args = 0, pretend = 0, frame = 0
+ 3022              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3023 0288 0DC0A0E1 		mov	ip, sp
+ 3024              	.LCFI4:
+ 3025              		.cfi_def_cfa_register 12
+ 3026 028c 00D82DE9 		stmfd	sp!, {fp, ip, lr, pc}
+ 3027 0290 04B04CE2 		sub	fp, ip, #4
+ 3028              		.cfi_offset 14, -8
+ 3029              		.cfi_offset 13, -12
+ 3030              		.cfi_offset 11, -16
+ 3031              	.LCFI5:
+ 3032              		.cfi_def_cfa 11, 4
+ 155:../main.c     **** 	setup();
+ 3033              		.loc 1 155 0
+ 3034 0294 FEFFFFEB 		bl	setup
+ 3035              	.L15:
+ 156:../main.c     **** 
+ 157:../main.c     **** 	while (1) {
+ 158:../main.c     **** 		loop();
+ 3036              		.loc 1 158 0 discriminator 1
+ 3037 0298 FEFFFFEB 		bl	loop
+ 159:../main.c     **** 	}
+ 3038              		.loc 1 159 0 discriminator 1
+ 3039 029c FDFFFFEA 		b	.L15
+ 3040              		.cfi_endproc
+ 3041              	.LFE2:
+ 3043              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:2733   .data:00000000 $d
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:2736   .data:00000000 RL
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:2744   .text:00000000 $a
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:2747   .text:00000000 setup
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:2813   .text:00000094 $d
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:2817   .text:00000098 $a
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:2820   .text:00000098 loop
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:3008   .text:00000280 $d
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:3013   .text:00000288 $a
+C:\Users\USUARI~1\AppData\Local\Temp\ccZ8u1zQ.s:3016   .text:00000288 main
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+leds_init
+D8Led_init
+D8Led_segment
+portG_conf
+portG_conf_pup
+Delay
+read_button
+led1_switch
+led2_switch
+D8Led_digit
