@@ -1,0 +1,75 @@
+   1              	# 1 "../T1-EJ1.asm"
+   1              	/*-----------------------------------------------------------------
+   0              	
+   0              	
+   0              	
+   2              			Workspace ejercicios 1 - 5
+   3              	*---------------------------------------------------------------*/
+   4              	
+   5              	// EJERCICIO 1
+   6              	.global start
+   7              	.EQU N,32
+   8              	.data
+   9 0000 01000000 	A:	.word 1, 2, 3, 4, 5, 6 @hasta 32
+   9      02000000 
+   9      03000000 
+   9      04000000 
+   9      05000000 
+  10              	
+  11              	.bss
+  12 0000 00000000 	B:	.space 4*N
+  12      00000000 
+  12      00000000 
+  12      00000000 
+  12      00000000 
+  13              	
+  14              	
+  15              	.text
+  16              	
+  17              	start:
+  18 0000 40009FE5 			LDR r0, =A
+  19 0004 40109FE5 			LDR r1, =B
+  20 0008 0020A0E3 			MOV R2, #0	@ r2 <- i
+  21              		b1:
+  22 000c 200052E3 			CMP R2, #32
+  23 0010 0B0000AA 			BGE b1_end
+  24              	
+  25 0014 023190E7 			LDR R3, [R0, R2, LSL #2]	@ R3 <- A[i]
+  26 0018 014003E2 			AND R4, R3, #0x00000001
+  27              		if1:
+  28 001c 000054E3 			CMP R4, #0
+  29 0020 0100001A 			BNE else1
+  30              	
+  31 0024 053083E2 			ADD R3, R3, #5	@ A[i] += 5
+  32 0028 020000EA 			B if1_end
+  33              	
+  34              		else1:
+  35 002c 0240A0E3 			MOV R4, #2
+  36 0030 930405E0 			MUL R5, R3, R4
+  37 0034 0530A0E1 			MOV R3, R5
+  38              	
+  39              		if1_end:
+  40 0038 023181E7 			STR R3, [R1, R2, LSL #2]
+  41 003c 012082E2 			ADD R2, R2, #1
+  42 0040 F1FFFFEA 			B b1
+  43              	
+  44              		b1_end:
+  45 0044 FEFFFFEA 			B .
+  46 0048 00000000 			.end
+  46      00000000 
+DEFINED SYMBOLS
+       ../T1-EJ1.asm:17     .text:00000000 start
+       ../T1-EJ1.asm:7      *ABS*:00000020 N
+       ../T1-EJ1.asm:9      .data:00000000 A
+       ../T1-EJ1.asm:12     .bss:00000000 B
+       ../T1-EJ1.asm:12     .bss:00000000 $d
+       ../T1-EJ1.asm:18     .text:00000000 $a
+       ../T1-EJ1.asm:21     .text:0000000c b1
+       ../T1-EJ1.asm:44     .text:00000044 b1_end
+       ../T1-EJ1.asm:27     .text:0000001c if1
+       ../T1-EJ1.asm:34     .text:0000002c else1
+       ../T1-EJ1.asm:39     .text:00000038 if1_end
+       ../T1-EJ1.asm:46     .text:00000048 $d
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS

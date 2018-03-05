@@ -1,0 +1,57 @@
+   1              	# 1 "../pract1b.asm"
+   1              	/*-----------------------------------------------------------------
+   0              	
+   0              	
+   0              	
+   2              			Workspace ejercicios 1 - 5
+   3              	*---------------------------------------------------------------*/
+   4              	
+   5              	// EJERCICIO 1
+   6              	.global start
+   7              	.EQU N,32
+   8              	.data
+   9 0000 80000000 	A:	.word 4*N
+  10              	
+  11              	.bss
+  12 0000 00000000 	B:	.space 4*N
+  12      00000000 
+  12      00000000 
+  12      00000000 
+  12      00000000 
+  13              	
+  14              	
+  15              	.text
+  16              	
+  17              	start:
+  18 0000 1C009FE5 			LDR r0, =A
+  19 0004 1C109FE5 			LDR r1, =B
+  20 0008 0020A0E3 			MOV R2, #0	@ r2 <- i
+  21              		b1:
+  22 000c 200052E3 			CMP R2, #32
+  23 0010 020000AA 			BGE b1_end
+  24              	
+  25 0014 023190E7 			LDR R3, [R0, R2, LSL #2]	@ R3 <- A[i]
+  26              		if1:
+  27 0018 014003E2 			AND R4, R3, #0x00000001
+  28              	
+  29 001c 012042E2 			SUB R2, R2, #1
+  30              		b1_end:
+  31              	
+  32              	
+  33 0020 FEFFFFEA 			b .
+  34 0024 00000000 			.end
+  34      00000000 
+DEFINED SYMBOLS
+      ../pract1b.asm:17     .text:00000000 start
+      ../pract1b.asm:7      *ABS*:00000020 N
+      ../pract1b.asm:9      .data:00000000 A
+      ../pract1b.asm:12     .bss:00000000 B
+      ../pract1b.asm:12     .bss:00000000 $d
+      ../pract1b.asm:18     .text:00000000 $a
+      ../pract1b.asm:21     .text:0000000c b1
+      ../pract1b.asm:30     .text:00000020 b1_end
+      ../pract1b.asm:26     .text:00000018 if1
+      ../pract1b.asm:34     .text:00000024 $d
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS

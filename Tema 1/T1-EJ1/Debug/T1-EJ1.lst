@@ -1,0 +1,88 @@
+
+T1-EJ1.elf:     file format elf32-littlearm
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .data         00000018  0c000000  0c000000  00008000  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .bss          00000080  0c000018  0c000018  00008018  2**0
+                  ALLOC
+  2 .text         00000050  0c000098  0c000098  00008098  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  3 .ARM.attributes 00000022  00000000  00000000  000080e8  2**0
+                  CONTENTS, READONLY
+  4 .debug_line   0000004e  00000000  00000000  0000810a  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_info   00000055  00000000  00000000  00008158  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_abbrev 00000014  00000000  00000000  000081ad  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_aranges 00000020  00000000  00000000  000081c8  2**3
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+0c000098 <start>:
+
+
+.text
+
+start:
+		LDR r0, =A
+ c000098:	e59f0040 	ldr	r0, [pc, #64]	; c0000e0 <b1_end+0x4>
+		LDR r1, =B
+ c00009c:	e59f1040 	ldr	r1, [pc, #64]	; c0000e4 <b1_end+0x8>
+		MOV R2, #0	@ r2 <- i
+ c0000a0:	e3a02000 	mov	r2, #0
+
+0c0000a4 <b1>:
+	b1:
+		CMP R2, #32
+ c0000a4:	e3520020 	cmp	r2, #32
+		BGE b1_end
+ c0000a8:	aa00000b 	bge	c0000dc <b1_end>
+
+		LDR R3, [R0, R2, LSL #2]	@ R3 <- A[i]
+ c0000ac:	e7903102 	ldr	r3, [r0, r2, lsl #2]
+		AND R4, R3, #0x00000001
+ c0000b0:	e2034001 	and	r4, r3, #1
+
+0c0000b4 <if1>:
+	if1:
+		CMP R4, #0
+ c0000b4:	e3540000 	cmp	r4, #0
+		BNE else1
+ c0000b8:	1a000001 	bne	c0000c4 <else1>
+
+		ADD R3, R3, #5	@ A[i] += 5
+ c0000bc:	e2833005 	add	r3, r3, #5
+		B if1_end
+ c0000c0:	ea000002 	b	c0000d0 <if1_end>
+
+0c0000c4 <else1>:
+
+	else1:
+		MOV R4, #2
+ c0000c4:	e3a04002 	mov	r4, #2
+		MUL R5, R3, R4
+ c0000c8:	e0050493 	mul	r5, r3, r4
+		MOV R3, R5
+ c0000cc:	e1a03005 	mov	r3, r5
+
+0c0000d0 <if1_end>:
+
+	if1_end:
+		STR R3, [R1, R2, LSL #2]
+ c0000d0:	e7813102 	str	r3, [r1, r2, lsl #2]
+		ADD R2, R2, #1
+ c0000d4:	e2822001 	add	r2, r2, #1
+		B b1
+ c0000d8:	eafffff1 	b	c0000a4 <b1>
+
+0c0000dc <b1_end>:
+
+	b1_end:
+		B .
+ c0000dc:	eafffffe 	b	c0000dc <b1_end>
+ c0000e0:	0c000000 	.word	0x0c000000
+ c0000e4:	0c000018 	.word	0x0c000018

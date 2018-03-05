@@ -1,0 +1,142 @@
+
+T1-EJ6.elf:     file format elf32-littlearm
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .data         00000050  0c000000  0c000000  00008000  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .bss          00000100  0c000050  0c000050  00008050  2**0
+                  ALLOC
+  2 .text         000000a8  0c000150  0c000150  00008150  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  3 .ARM.attributes 0000002e  00000000  00000000  000081f8  2**0
+                  CONTENTS, READONLY
+  4 .debug_line   00000060  00000000  00000000  00008226  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_info   00000055  00000000  00000000  00008286  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_abbrev 00000014  00000000  00000000  000082db  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_aranges 00000020  00000000  00000000  000082f0  2**3
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_frame  00000020  00000000  00000000  00008310  2**2
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+0c000150 <abs_escalar>:
+C: 	.space (4*N)*(4*N)
+
+.text
+abs_escalar:
+
+		PUSH {r4-r10, PC}
+ c000150:	e92d87f0 	push	{r4, r5, r6, r7, r8, r9, sl, pc}
+		MOV R4, R0	@ r4 <- =A
+ c000154:	e1a04000 	mov	r4, r0
+		MOV R5, R1	@ r5 <- =B
+ c000158:	e1a05001 	mov	r5, r1
+		MOV R6, R2  @ r6 <- n
+ c00015c:	e1a06002 	mov	r6, r2
+		MOV R7, #0	@ r7 <- j
+ c000160:	e3a07000 	mov	r7, #0
+		MOV R10, #0	@ r10 <- C[i]
+ c000164:	e3a0a000 	mov	sl, #0
+
+0c000168 <b2>:
+	b2:
+		CMP R7, #N
+ c000168:	e3570004 	cmp	r7, #4
+		BGE b2_end
+ c00016c:	aa000009 	bge	c000198 <b2_end>
+
+		@ no hay que sumarle a la direccion
+		@ base de A i * NCOLUMNAS porque lo
+		@ hemos adaptado al pasarlo por par.
+
+		LDR R0, [R4, R7, LSL #2]	@ r8 <- A[i][j]
+ c000170:	e7940107 	ldr	r0, [r4, r7, lsl #2]
+		BL abs
+ c000174:	eb00001c 	bl	c0001ec <abs>
+		MOV R8, R0					@ r8 <- abs(A[i][j])
+ c000178:	e1a08000 	mov	r8, r0
+
+		LDR R0, [R5, R7, LSL #2]	@ r9 <- B[j]
+ c00017c:	e7950107 	ldr	r0, [r5, r7, lsl #2]
+		BL abs
+ c000180:	eb000019 	bl	c0001ec <abs>
+		MOV R9, R0			@ r9 <- abs(B[i])
+ c000184:	e1a09000 	mov	r9, r0
+
+		MUL R11, R9, R8		@ r9 <- abs(A[i][j])*abs(B[i])
+ c000188:	e00b0899 	mul	fp, r9, r8
+		ADD R10, R10, R11	@ r10 <- r10 += abs(A[i][j])*abs(B[i])
+ c00018c:	e08aa00b 	add	sl, sl, fp
+
+		ADD R7, R7, #1
+ c000190:	e2877001 	add	r7, r7, #1
+		B b2
+ c000194:	eafffff3 	b	c000168 <b2>
+
+0c000198 <b2_end>:
+	b2_end:
+
+		POP {r4-r10, PC}
+ c000198:	e8bd87f0 	pop	{r4, r5, r6, r7, r8, r9, sl, pc}
+		BX LR
+ c00019c:	e12fff1e 	bx	lr
+
+0c0001a0 <start>:
+
+start:
+
+		LDR R4, =A
+ c0001a0:	e59f4038 	ldr	r4, [pc, #56]	; c0001e0 <b1_end+0x4>
+		LDR R5, =B
+ c0001a4:	e59f5038 	ldr	r5, [pc, #56]	; c0001e4 <b1_end+0x8>
+		LDR R6, =C
+ c0001a8:	e59f6038 	ldr	r6, [pc, #56]	; c0001e8 <b1_end+0xc>
+		MOV R7, #0		@ r7 <- i
+ c0001ac:	e3a07000 	mov	r7, #0
+
+0c0001b0 <b1>:
+	b1:
+		CMP R7, #N
+ c0001b0:	e3570004 	cmp	r7, #4
+		BGE b1_end
+ c0001b4:	aa000008 	bge	c0001dc <b1_end>
+
+		MOV R9, #N
+ c0001b8:	e3a09004 	mov	r9, #4
+		MUL R8, R9, R7	@ R8 <- (i * nColumnas)
+ c0001bc:	e0080799 	mul	r8, r9, r7
+		ADD R0, R4, R8	@ r0 <- =A adaptada
+ c0001c0:	e0840008 	add	r0, r4, r8
+		MOV R1, R5		@ r1 <- =B
+ c0001c4:	e1a01005 	mov	r1, r5
+		MOV R2, #N		@ r2 <- n
+ c0001c8:	e3a02004 	mov	r2, #4
+		BL abs_escalar
+ c0001cc:	ebffffdf 	bl	c000150 <abs_escalar>
+
+		STR R0, [R6, R7, LSL #2]	@ r0 -> C[i]
+ c0001d0:	e7860107 	str	r0, [r6, r7, lsl #2]
+
+		ADD R7, R7, #1
+ c0001d4:	e2877001 	add	r7, r7, #1
+		B b1
+ c0001d8:	eafffff4 	b	c0001b0 <b1>
+
+0c0001dc <b1_end>:
+
+	b1_end:
+		B .
+ c0001dc:	eafffffe 	b	c0001dc <b1_end>
+ c0001e0:	0c000000 	.word	0x0c000000
+ c0001e4:	0c000040 	.word	0x0c000040
+ c0001e8:	0c000050 	.word	0x0c000050
+
+0c0001ec <abs>:
+ c0001ec:	e3500000 	cmp	r0, #0
+ c0001f0:	b2600000 	rsblt	r0, r0, #0
+ c0001f4:	e12fff1e 	bx	lr

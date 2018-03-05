@@ -1,0 +1,75 @@
+   1              	# 1 "../T1-EJ3.asm"
+   1              	// EJERCICIO 3
+   0              	
+   0              	
+   0              	
+   2              	.global start
+   3              	.EQU N,4
+   4              	.data
+   5 0000 01000000 	A:	.word 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+   5      02000000 
+   5      03000000 
+   5      04000000 
+   5      05000000 
+   6              	
+   7              	.bss
+   8 0000 00000000 	B:	.space (4*N)*(4*N)
+   8      00000000 
+   8      00000000 
+   8      00000000 
+   8      00000000 
+   9              	
+  10              	
+  11              	.text
+  12              	
+  13              	
+  14              	start:
+  15 0000 4C409FE5 			LDR R4, =A
+  16 0004 4C509FE5 			LDR R5, =B
+  17 0008 0060A0E3 			MOV R6, #0	@ R6 <- i
+  18 000c 0070A0E3 			MOV R7, #0  @ R7 <- j
+  19              	
+  20 0010 040056E3 		b1: CMP R6, #N
+  21 0014 0D0000AA 			BGE b1_end
+  22              	
+  23 0018 040057E3 		b2: CMP R7, #N
+  24 001c 080000AA 			BGE b2_end
+  25              	
+  26 0020 04A0A0E3 			MOV R10, #N
+  27              	
+  28 0024 960A08E0 			MUL R8, R6, R10	@ R8 <- i * NCOLUMNAS
+  29 0028 078088E0 			ADD R8, R8, R7	@ R8 <- j + (i * NCOLUMNAS)
+  30              	
+  31 002c 970A09E0 			MUL R9, R7, R10	@ R9 <- j * NCOLUMNAS
+  32 0030 069089E0 			ADD R9, R9, R6	@ R9 <- i + (j * NCOLUMNAS)
+  33              	
+  34 0034 080194E7 			LDR R0, [R4, R8, LSL #2]
+  35 0038 090185E7 			STR R0, [R5, R9, LSL # 2]
+  36              	
+  37 003c 017087E2 			ADD R7, R7, #1
+  38 0040 F2FFFFEA 			B b1
+  39              	
+  40              		b2_end:
+  41 0044 016086E2 			ADD R6, R6, #1
+  42 0048 0070A0E3 			MOV R7, #0
+  43 004c EFFFFFEA 			B b1
+  44              	
+  45              		b1_end:
+  46 0050 FEFFFFEA 			B .
+  47 0054 00000000 			.end
+  47      00000000 
+DEFINED SYMBOLS
+       ../T1-EJ3.asm:14     .text:00000000 start
+       ../T1-EJ3.asm:3      *ABS*:00000004 N
+       ../T1-EJ3.asm:5      .data:00000000 A
+       ../T1-EJ3.asm:8      .bss:00000000 B
+       ../T1-EJ3.asm:8      .bss:00000000 $d
+       ../T1-EJ3.asm:15     .text:00000000 $a
+       ../T1-EJ3.asm:20     .text:00000010 b1
+       ../T1-EJ3.asm:45     .text:00000050 b1_end
+       ../T1-EJ3.asm:23     .text:00000018 b2
+       ../T1-EJ3.asm:40     .text:00000044 b2_end
+       ../T1-EJ3.asm:47     .text:00000054 $d
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS

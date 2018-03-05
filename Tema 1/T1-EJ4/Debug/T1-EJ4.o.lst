@@ -1,0 +1,60 @@
+   1              	# 1 "../T1-EJ4.asm"
+   1              	// EJERCICIO 3
+   0              	
+   0              	
+   0              	
+   2              	.extern swap
+   3              	.global start
+   4              	.EQU N,16
+   5              	.data
+   6 0000 01000000 	A:	.word 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+   6      02000000 
+   6      03000000 
+   6      04000000 
+   6      05000000 
+   7              	
+   8              	.bss
+   9              	
+  10              	swap:
+  11              	
+  12              	.text
+  13              	start:
+  14 0000 30409FE5 			LDR R4, =A
+  15 0004 0060A0E3 			MOV R6, #0	@ R6 <- i
+  16 0008 0070A0E3 			MOV R7, #0	@ R7 <- j
+  17              		b1:
+  18 000c 100056E3 			CMP R6, #N
+  19 0010 070000AA 			BGE b1_end
+  20              	
+  21 0014 1080A0E3 			MOV R8, #N
+  22 0018 068048E0 			SUB R8, R8, R6	@ R8 <- N - i
+  23              		b2:
+  24 001c 080057E1 			CMP R7, R8
+  25 0020 010000AA 			BGE b2_end
+  26              	
+  27              			// LLAMADA A SWAP(V[j], V[i])
+  28              	
+  29 0024 017087E2 			ADD R7, R7, #1
+  30 0028 016086E2 			ADD R6, R6, #1	@ ++i
+  31              		b2_end:
+  32 002c 0070A0E3 			MOV R7, #0
+  33 0030 F5FFFFEA 			b b1
+  34              		b1_end:
+  35              	
+  36              	
+  37 0034 FEFFFFEA 			B .
+  38 0038 00000000 			.end
+DEFINED SYMBOLS
+       ../T1-EJ4.asm:13     .text:00000000 start
+       ../T1-EJ4.asm:4      *ABS*:00000010 N
+       ../T1-EJ4.asm:6      .data:00000000 A
+       ../T1-EJ4.asm:10     .bss:00000000 swap
+       ../T1-EJ4.asm:14     .text:00000000 $a
+       ../T1-EJ4.asm:17     .text:0000000c b1
+       ../T1-EJ4.asm:34     .text:00000034 b1_end
+       ../T1-EJ4.asm:23     .text:0000001c b2
+       ../T1-EJ4.asm:31     .text:0000002c b2_end
+       ../T1-EJ4.asm:38     .text:00000038 $d
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS
